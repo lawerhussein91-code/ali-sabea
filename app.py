@@ -20,13 +20,18 @@ def login():
 
         df = pd.read_excel(EXCEL_FILE)
 
-        if emp_no not in df["الرقم الوظيفي"].astype(str).values:
-            flash("لم ترد الأضبارة")
-            return redirect("/")
+       emp_no = request.form.get("emp_no").strip()
+password = request.form.get("password")
 
-        if password != DEFAULT_PASSWORD:
-            flash("كلمة المرور غير صحيحة")
-            return redirect("/")
+df = pd.read_excel(EXCEL_FILE)
+
+# تحويل عمود الرقم الوظيفي إلى نص وتنظيفه
+df["الرقم الوظيفي"] = df["الرقم الوظيفي"].astype(str).str.strip()
+
+if emp_no not in df["الرقم الوظيفي"].values:
+    flash("لم ترد الأضبارة")
+    return redirect("/")
+
 
         session["emp_no"] = emp_no
         return redirect("/dashboard")
