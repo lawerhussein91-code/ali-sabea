@@ -7,12 +7,12 @@ app.secret_key = "ali_sabea_secret_key"
 
 DEFAULT_PASSWORD = "12345678"
 EXCEL_FILE = "برنامج الترقيات 7-1-2026.xlsx"
-SHEET_NAME = "شيت عمل"
+SHEET_INDEX = 0
 
 
 def load_df():
     # قراءة الشيت المعتمد
-    df = pd.read_excel(EXCEL_FILE, sheet_name=SHEET_NAME)
+ df = pd.read_excel(EXCEL_FILE, sheet_name=SHEET_INDEX)
 
     # تنظيف أسماء الأعمدة
     df.columns = df.columns.astype(str).str.strip()
