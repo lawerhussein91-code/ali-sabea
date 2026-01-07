@@ -7,38 +7,49 @@ app.secret_key = "ali_sabea_secret_key"
 
 DEFAULT_PASSWORD = "12345678"
 EXCEL_FILE = "برنامج الترقيات 7-1-2026.xlsx"
+SHEET_NAME = "شيت عمل"
+
+
+def load_df():
+    # قراءة الشيت المعتمد
+    df = pd.read_excel(EXCEL_FILE, sheet_name=SHEET_NAME)
+
+    # تنظيف أسماء الأعمدة
+    df.columns = df.columns.astype(str).str.strip()
+
+    # التأكد من وجود العمود الأساسي
+    if "الرقم الوظيفي" not in df.columns:
+        raise ValueError("عمود الرقم الوظيفي غير موجود")
+
+    # تنظيف أرقام الموظفين (يشيل مسافات ويشيل .0)
+    df["الرقم الوظيفي"] = (
+        df["الرقم الوظيفي"]
+        .astype(str)
+        .str.strip()
+        .str.replace(".0", "", regex=False)
+    )
+
+    return df
 
 
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         emp_no = request.form.get("emp_no", "").strip()
-        password = request.form.get("password")
+        password = request.form.get("password", "")
 
-        # قراءة الشيت النظيف
-       df = pd.read_excel(EXCEL_FILE, sheet_name="شيت عمل")
-
-        # تنظيف أسماء الأعمدة
-        df.columns = df.columns.astype(str).str.strip()
-
-        # التأكد من وجود العمود
-        if "الرقم الوظيفي" not in df.columns:
-            flash("عمود الرقم الوظيفي غير موجود")
+        try:
+            df = load_df()
+        except Exception as e:
+            flash(f"خطأ بملف الإكسل: {e}")
             return redirect("/")
 
-        # تنظيف الرقم الوظيفي
-        df["الرقم الوظيفي"] = (
-            df["الرقم الوظيفي"]
-            .astype(str)
-            .str.strip()
-            .str.replace(".0", "", regex=False)
-        )
-
+        # التحقق من وجود الموظف
         if emp_no not in df["الرقم الوظيفي"].values:
             flash("لم ترد الأضبارة")
             return redirect("/")
 
-        # (حاليًا باسوورد موحد)
+        # كلمة المرور الموحدة حالياً
         if password != DEFAULT_PASSWORD:
             flash("كلمة المرور غير صحيحة")
             return redirect("/")
@@ -54,11 +65,8 @@ def dashboard():
     if "emp_no" not in session:
         return redirect("/")
 
-   df = pd.read_excel(EXCEL_FILE, sheet_name="شيت عمل")
-
-    df.columns = df.columns.astype(str).str.strip()
-
-    row = df[df["الرقم الوظيفي"].astype(str).str.strip() == session["emp_no"]].iloc[0]
+    df = load_df()
+    row = df[df["الرقم الوظيفي"] == session["emp_no"]].iloc[0]
 
     return render_template("dashboard.html", row=row)
 
