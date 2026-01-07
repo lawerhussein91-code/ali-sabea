@@ -7,21 +7,17 @@ app.secret_key = "ali_sabea_secret_key"
 
 DEFAULT_PASSWORD = "12345678"
 EXCEL_FILE = "برنامج الترقيات 7-1-2026.xlsx"
-SHEET_INDEX = 0
+SHEET_INDEX = 1  # الشيت الثاني
 
 
 def load_df():
-    # قراءة الشيت المعتمد
- df = pd.read_excel(EXCEL_FILE, sheet_name=SHEET_INDEX)
+    df = pd.read_excel(EXCEL_FILE, sheet_name=SHEET_INDEX)
 
-    # تنظيف أسماء الأعمدة
     df.columns = df.columns.astype(str).str.strip()
 
-    # التأكد من وجود العمود الأساسي
     if "الرقم الوظيفي" not in df.columns:
         raise ValueError("عمود الرقم الوظيفي غير موجود")
 
-    # تنظيف أرقام الموظفين (يشيل مسافات ويشيل .0)
     df["الرقم الوظيفي"] = (
         df["الرقم الوظيفي"]
         .astype(str)
@@ -44,12 +40,10 @@ def login():
             flash(f"خطأ بملف الإكسل: {e}")
             return redirect("/")
 
-        # التحقق من وجود الموظف
         if emp_no not in df["الرقم الوظيفي"].values:
             flash("لم ترد الأضبارة")
             return redirect("/")
 
-        # كلمة المرور الموحدة حالياً
         if password != DEFAULT_PASSWORD:
             flash("كلمة المرور غير صحيحة")
             return redirect("/")
@@ -59,20 +53,28 @@ def login():
 
     return render_template("login.html")
 
+
 @app.route("/dashboard")
 def dashboard():
     if "emp_no" not in session:
         return redirect("/")
 
-    try:
-        df = load_df()
+    df = load_df()
+    row = df[df["الرقم الوظيفي"] == session["emp_no"]]
 
-        row = df[df["الرقم الوظيفي"] == session["emp_no"]]
+    if row.empty:
+        flash("لم ترد الأضبارة")
+        return redirect("/")
 
-        if row.empty:
-            return "ERROR: الموظف موجود بالجلسة لكن غير موجود بالبيانات"
+    return render_template("dashboard.html", row=row.iloc[0])
 
-        return render_template("dashboard.html", row=row.iloc[0])
 
-    except Exception as e:
-        return f"ERROR DETAILS: {e}"
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", "10000"))
+    app.run(host="0.0.0.0", port=port)
