@@ -59,24 +59,20 @@ def login():
 
     return render_template("login.html")
 
-
 @app.route("/dashboard")
 def dashboard():
     if "emp_no" not in session:
         return redirect("/")
 
-    df = load_df()
-    row = df[df["الرقم الوظيفي"] == session["emp_no"]].iloc[0]
+    try:
+        df = load_df()
 
-    return render_template("dashboard.html", row=row)
+        row = df[df["الرقم الوظيفي"] == session["emp_no"]]
 
+        if row.empty:
+            return "ERROR: الموظف موجود بالجلسة لكن غير موجود بالبيانات"
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
+        return render_template("dashboard.html", row=row.iloc[0])
 
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "10000"))
-    app.run(host="0.0.0.0", port=port)
+    except Exception as e:
+        return f"ERROR DETAILS: {e}"
