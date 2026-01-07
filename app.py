@@ -16,7 +16,7 @@ def login():
         password = request.form.get("password")
 
         # قراءة الشيت النظيف
-        df = pd.read_excel(EXCEL_FILE)
+       df = pd.read_excel(EXCEL_FILE, sheet_name="شيت عمل")
 
         # تنظيف أسماء الأعمدة
         df.columns = df.columns.astype(str).str.strip()
@@ -54,7 +54,8 @@ def dashboard():
     if "emp_no" not in session:
         return redirect("/")
 
-    df = pd.read_excel(EXCEL_FILE)
+   df = pd.read_excel(EXCEL_FILE, sheet_name="شيت عمل")
+
     df.columns = df.columns.astype(str).str.strip()
 
     row = df[df["الرقم الوظيفي"].astype(str).str.strip() == session["emp_no"]].iloc[0]
