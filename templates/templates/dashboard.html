@@ -2,6 +2,18 @@
 def dashboard():
     try:
         df = load_excel()
-        return f"COLUMNS: {list(df.columns)}"
+        row = df[df["الرقم الوظيفي"].astype(str) == session.get("emp_no")]
+
+        if row.empty:
+            return "NOT FOUND"
+
+        return f"""
+        الاسم الكامل: {row.iloc[0]['الاسم الكامل']} <br>
+        العنوان الوظيفي: {row.iloc[0]['العنوان الوظيفي']} <br>
+        الدرجة: {row.iloc[0]['الدرجة']} <br>
+        المرحلة: {row.iloc[0]['المرحلة']} <br>
+        تاريخ الاستحقاق الجديد: {row.iloc[0]['تاريخ الاستحقاق الجديد']} <br>
+        عدد كتب الشكر: {row.iloc[0]['عدد كتب الشكر']}
+        """
     except Exception as e:
         return f"ERROR: {e}"
